@@ -4,8 +4,10 @@ To run this project make sure you have your database mapped to the default port 
 
 Running it in the console this is the response I get:
 
-➜  mongo_db_assignment git:(master) python3 assignment.py 
+➜  mongo_db_assignment git:(master) python3 assignment.py
+
 659775
+
 {'_id': 'lost_dog', 'references': 549.0}
 {'_id': 'tweetpet', 'references': 310.0}
 {'_id': 'VioletsCRUK', 'references': 251.0}
