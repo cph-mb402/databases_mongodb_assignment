@@ -1,8 +1,6 @@
 import pprint
 import pymongo
 from pymongo import MongoClient
-from bson.regex import Regex
-from bson.son import SON
 
 def pp(obj):
     pprint.pprint(obj)
@@ -12,45 +10,186 @@ def ppall(col):
         pp(p)
 
 client = MongoClient()
-database = client["twitter"]
+database = client["TwitterDB"]
 collection = database["tweets"]
 
-# Users Number
-distinct_users = collection.distinct("user")
-pp(len(distinct_users))
+# Query 1
+def query1():
+    distinct_users = collection.distinct("user")
+    pp(len(distinct_users))
 
-# Top 10
-pipeline = [
-    {
-        u"$match": {
-            u"text": {
-                u"$regex": u"@\\w+"
+# Query 2
+def query2():
+    pipeline = [
+        {
+            '$match': {
+                'text': {
+                    '$regex': '@\w+'
+                }
             }
-        }
-    }, 
-    {
-        u"$group": {
-            u"_id": u"$user",
-            u"references": {
-                u"$sum": 1.0
+        }, 
+        {
+            '$group': {
+                '_id': '$user',
+                'references': {
+                    '$sum': 1
+                }
             }
+        }, 
+        {
+            '$sort': {
+                'references': -1
+            }
+        }, 
+        {
+            '$limit': 10.0
         }
-    }, 
-    {
-        u"$sort": SON([ (u"references", -1) ])
-    }, 
-    {
-        u"$limit": 10.0
-    }
-]
+    ]
 
-retweets = collection.aggregate(
-    pipeline, 
-    allowDiskUse = False
-)
+    results = collection.aggregate(pipeline)
 
-for doc in retweets:
-	print(doc)
+    for item in results:
+    	print(item)
 
-# while (retweets.hasNext()): 
-   # print(tojson(retweets.next()));
+#Query 3
+def query3():
+    pipeline = [
+        {
+            '$addFields': {
+                'words': {
+                    '$split': ['$text', ' ']
+                }
+            }
+        },
+        {
+            '$unwind': '$words'
+        }, 
+        { 
+            '$match': {
+                'words': {
+                    '$regex':'@\w+','$options': 'm'
+                }
+            }
+        }, 
+        {
+            '$group': {
+                '_id':'$words',
+                'total': {
+                    '$sum': 1
+                }
+            }
+        },
+        {
+            '$sort': {
+                'total': -1
+            }
+        },
+        {
+            '$limit': 5
+        }
+    ]
+
+    results = collection.aggregate(pipeline)
+
+    for item in results:
+        print(item)
+
+#Query 4
+def query4():
+    pipeline = [
+        {
+            '$group':{
+                '_id':'$user',
+                'count':{
+                    '$sum':1
+                }
+            }
+        },
+        {
+            '$sort':{
+                'count': -1
+            }
+        },
+        {
+            '$limit': 10
+        }
+    ]
+    results = collection.aggregate(pipeline)
+
+    for item in results:
+        print(item)
+
+#Query 5
+def query5():
+    pipeline=[
+        {
+            '$facet':
+                {
+                    'grumpy': [
+                            {
+                                '$match': {
+                                    'polarity': {
+                                            '$eq':0
+                                    }
+                                }
+                            },
+                            {
+                                '$group': {
+                                    '_id' : '$user',
+                                    'count' : {
+                                        '$sum' : 1
+                                    }
+                                }
+                            },
+                            {
+                                '$sort': {
+                                    'count': -1
+                                }
+                            },
+                            {
+                                '$limit': 5
+                            }
+                    ],
+                    'happy':[
+                        {
+                            '$match':{
+                                'polarity':{
+                                        '$eq':4
+                                }
+                            }
+                        },
+                        {
+                            '$group':{
+                                '_id' : '$user',
+                                'count' : {
+                                    '$sum' : 1
+                                }
+                            }
+                        },
+                        {
+                            '$sort':{
+                                'count': -1
+                            }
+                        },
+                        {
+                            '$limit': 5
+                        }
+                    ]
+                }
+        }
+    ]
+    results = collection.aggregate(pipeline)
+
+    for item in results:
+        print(item)
+
+print("Total users:")
+query1()
+print("Users who link the most to others:")
+query2()
+print("Most mentioned users:")
+query3()
+print("Most active users:")
+query4()
+print("Most grumpy and most happy:")
+query5()
