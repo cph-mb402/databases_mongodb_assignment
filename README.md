@@ -98,5 +98,4 @@ Atomicity: Writing is atomic because the data is inserted into a single document
 
 Sharding: Since this pattern is not so good at modifying the tree structure, it might benefit from sharding, but it might also increase complexity too much
 
-Collection Contains Large Number of Small Documents: This pattern could benefit from rolling up if the same group of objects is constalty retrieved
-
+Indexes: Indexing doesn't help that much since you can only index the parent, the left, and the right element of the document
