@@ -64,4 +64,36 @@ Most grumpy and most happy:
         {'_id': 'keza34', 'count': 211}
     ]
 }
- 
+```
+
+
+Model | Atomicity | Sharding |Indexes |Large Number of Collections | Collection Contains Large Number of Small Documents
+----|:----:|:----:|:----:|:----:|:----:
+Arrays of Ancestors	|x| |x|x| |
+Materialized paths  | |x ||x|x|
+Nested sets			|x|x|x|| |
+
+Arrays of Ancestors:
+
+Atomicity: Writing is atomic because the data is inserted into a single document, and the relations are specified in the inserted object, so no need to insert/update other objects
+
+Indexes: Ancestors and descendants can be quickly found by creating an index on the elements of the ancestors field
+
+Large number of collections: Viable strategy, reducing the number of documents in each collection, therefore improving performance, since all ancestors are stored in each document
+
+Materialized paths:
+
+Sharding: Since the pattern is fast and straightforward, sharding should be implemented as a last resort
+
+Large Number of Collections: Viable strategy, reducing the number of documents in each collection, therefore improving performance and possibly keeping document size smaller
+
+Collection Contains Large Number of Small Documents: In the case there are a lot of documents with a small path, and they are often accessed as a group, rolling up might be a good solution
+
+Nested Sets:
+
+Atomicity: Writing is atomic because the data is inserted into a single document, and the relations are specified in the inserted object, so no need to insert/update other objects
+
+Sharding: Since this pattern is not so good at modifying the tree structure, it might benefit from sharding, but it might also increase complexity too much
+
+Collection Contains Large Number of Small Documents: This pattern could benefit from rolling up if the same group of objects is constalty retrieved
+
